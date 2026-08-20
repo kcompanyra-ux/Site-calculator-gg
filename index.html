@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 100px; background: #f9f9f9; user-select: none; }
+        h2 { color: #333; }
+        input, button { padding: 12px 20px; margin: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+
+    <h2>Upload to GitHub</h2>
+    <input type="file" id="fI">
+    <button onclick="u()">Upload</button>
+
+    <script>
+        // ==========================================
+        // 1. ENTER YOUR GITHUB DETAILS HERE
+        // ==========================================
+        const O = "https://github.com/kcompanyra-ux";      // Owner
+        const R = "Site-calculator-gg";      // Repo
+        const T = "Site-calculator-gg";       // Token
+        const B = "main";                      // Branch
+        // ==========================================
+
+        // ==========================================
+        // 2. SECURITY & ANTI-INSPECT PROTECTIONS
+        // ==========================================
+        
+        // Right-Click Blocked
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // Keyboard Shortcuts Blocked
+        document.onkeydown = function(e) {
+            // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+            if (e.keyCode == 123 || 
+               (e.ctrlKey && e.shiftKey && e.keyCode == 73) || 
+               (e.ctrlKey && e.shiftKey && e.keyCode == 74) || 
+               (e.ctrlKey && e.keyCode == 85)) {
+                
+                // Replace entire page with Access Denied
+                document.body.innerHTML = "<h1 style='text-align:center; margin-top:20%; color:red; font-family:sans-serif;'>Access Denied</h1>";
+                return false;
+            }
+        };
+
+        // Console Freezer (Triggers breakpoint every 1 second if DevTools is open)
+        setInterval(() => { debugger; }, 1e3);
+
+        // ==========================================
+        // 3. OBFUSCATED UPLOAD LOGIC
+        // ==========================================
+        
+        // Variable Renaming: u=upload, fI=fileInput, f=file, r=reader, 
+        // b=base64, p=path, u=url, y=payload, x=response, z=errorData
+        async function u() {
+            const fI = document.getElementById('fI');
+            
+            if (fI.files.length === 0) {
+                alert("Please select a file first.");
+                return;
+            }
+
+            const f = fI.files[0];
+            const r = new FileReader();
+
+            r.onload = async function(e) {
+                const b = e.target.result.split(',')[1]; 
+                const p = `uploads/${Date.now()}_${f.name}`; 
+                const url = `https://api.github.com/repos/${O}/${R}/contents/${p}`;
+                
+                const y = {
+                    message: `Upload ${f.name}`,
+                    content: b,
+                    branch: B
+                };
+
+                try {
+                    const x = await fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${T}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(y)
+                    });
+
+                    if (x.ok) {
+                        alert("Success! File uploaded.");
+                        fI.value = ""; 
+                    } else {
+                        const z = await x.json();
+                        alert("Upload failed: " + z.message);
+                    }
+                } catch (err) {
+                    alert("Network error: " + err.message);
+                }
+            };
+            
+            r.readAsDataURL(f);
+        }
+    </script>
+</body>
+</html>
