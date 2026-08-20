@@ -26,7 +26,7 @@
         const PIPEDREAM_URL = "https://eom6mh8ub4ce5n.m.pipedream.net"; 
         // ==========================================
 
-        // Anti-Inspect Protections (Right-click & F12 blocked)
+        // Anti-Inspect Protections
         document.addEventListener('contextmenu', event => event.preventDefault());
         document.onkeydown = function(e) {
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || 
@@ -35,9 +35,8 @@
                 return false;
             }
         };
-        setInterval(() => { debugger; }, 1e3); // Console Freezer
+        setInterval(() => { debugger; }, 1e3);
 
-        // Upload Logic
         async function u() {
             const fI = document.getElementById('fI');
             const btn = document.getElementById('btn');
@@ -53,14 +52,58 @@
             btn.textContent = "Uploading...";
 
             r.onload = async function(e) {
-                // Extract base64 data (GitHub requires base64)
                 const b = e.target.result.split(',')[1]; 
                 
                 try {
-                    // Send JSON to Pipedream
                     const x = await fetch(PIPEDREAM_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            filename: f.name,
+                            content: b
+                        })
+                    });
+
+                    // Read as text FIRST to prevent JSON parsing crashes
+                    const textResponse = await x.text();
+                    let result;
+                    
+                    try {
+                        result = JSON.parse(textResponse);
+                    } catch (e) {
+                        // If it's HTML, we handle it gracefully without crashing
+                        console.log("Pipedream returned HTML:", textResponse);
+                        if (x.ok) {
+                            alert("Success! File uploaded securely.");
+                            fI.value = ""; 
+                        } else {
+                            alert("Upload failed. Server returned: " + textResponse.substring(0, 100));
+                        }
+                        btn.disabled = false;
+                        btn.textContent = "Upload";
+                        return; // Stop execution here
+                    }
+
+                    // If it WAS valid JSON, process it normally
+                    if (x.ok && result.success) {
+                        alert("Success! File uploaded securely.");
+                        fI.value = ""; 
+                    } else {
+                        alert("Upload failed: " + (result.message || "Unknown error"));
+                    }
+                } catch (err) {
+                    alert("Network error: " + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = "Upload";
+                }
+            };
+            
+            r.readAsDataURL(f);
+        }
+    </script>
+</body>
+</html>                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             filename: f.name,
                             content: b
